@@ -6,57 +6,53 @@ const emptyFieldCharacter = '░';
 const pathCharacter = '*';
 
 
-function askNextMove() {
-  const direction = prompt('Which way would you like to go?');
-  direction = direction.toLowerCase();
-
-  return direction;
-}
-
-function willYouReplay() {
-  const restart = prompt("Start Again? Type 'y' to start over or 'n' to exit.");
-  restart = restart.toLowerCase();
-
-  return restart === 'y' ?
-  true : restart === 'n' ?
-  false :
-  willYouReplay();
-}
-
-
 class Field {
   constructor(field) {
     this._field = field;
+    this._currentPosition = {
+      i: 0,
+      j: 0
+    }
   }
 
   get field() {
     return this._field;
   }
 
-  print() {
-    this.field.forEach(row => console.log(row.join(``)));
+  play() {
+    this.currentPosition;
+    this.print();
+    this.move();
+
   }
 
-  findCurrentPosition() {
+  print() {
+    this._field.forEach(row => console.log(row.join(``)));
 
-    const currentPosition = {
-      i: 0,
-      j: 0
-    }
+  }
+
+  get currentPosition() {
 
     this.field.forEach((row, rowIndex) => {
       const indexOfAsteriskInRow = row.indexOf('*');
 
       if (indexOfAsteriskInRow !== -1) {
-        currentPosition.j = indexOfAsteriskInRow;
-        currentPosition.i = rowIndex;
+        this._currentPosition.j = indexOfAsteriskInRow;
+        this._currentPosition.i = rowIndex;
       };
     });
 
-    return currentPosition;
+    return this._currentPosition;
   }
 
-  move(findCurrentPosition, direction) {
+  askNextMove() {
+    let direction = prompt('Which way would you like to go?');
+    direction = direction.toLowerCase();
+
+    return direction;
+  }
+
+  move() {
     const moves = {
       up: 'w',
       down:'s',
@@ -64,43 +60,62 @@ class Field {
       right:'d'
     };
 
+    const direction = this.askNextMove();
 
     const targetPosition = {
       i: 0,
       j: 0
-    };
+    }
 
     if (direction === moves.up) {
-      targetPosition.i = currentPosition.i -1;
-      targetPosition.j = currentPosition.j
+      targetPosition.i = this.currentPosition.i -1;
+      targetPosition.j = this.currentPosition.j
     } else if (direction === moves.down) {
-      targetPosition.i = currentPosition.i +1;
-      targetPosition.j = currentPosition.j;
+      targetPosition.i = this.currentPosition.i +1;
+      targetPosition.j = this.currentPosition.j;
     } else if (direction === moves.left) {
-      targetPosition.i = currentPosition.i;
-      targetPosition.j = currentPosition.i -1;
+      targetPosition.i = this.currentPosition.i;
+      targetPosition.j = this.currentPosition.j -1;
     } else if (direction === moves.right) {
-      targetPosition.i = currentPosition.i;
-      targetPosition.j = currentPosition.i +1;
+      targetPosition.i = this.currentPosition.i;
+      targetPosition.j = this.currentPosition.j +1;
     } else {
-      console.log("Invalid move: please use 'a' for left, 'w' for up, 's' fordown and 'd' for right.");
-      askNextMove()
+      console.log("Invalid move: please use 'a' for left, 'w' for up, 's' for down and 'd' for right.");
+      this.move();
     };
 
     const target = this.field[targetPosition.i][targetPosition.j];
 
     if (target) {
       if (target === hole) {
-
+        console.log('Oh no! You fell in a hole! GAME OVER!')
+        this.willYouReplay();
       } else if (target === hat) {
-
+        console.log('Congratulations! You found your hat!')
+        this.willYouReplay();
       } else if (target === emptyFieldCharacter) {
+        this._field[targetPosition.i].splice(targetPosition.j, 1, pathCharacter);
+        // this._field[this._currentPosition.i].splice(this._currentPosition.j, 1, emptyFieldCharacter);
+        this._currentPosition = targetPosition;
 
-      }
-    } else {
-      console.log('Oh no! You fell of the field! GAME OVER!')
-      willYouReplay();
-    };
+        this.print();
+        this.move();
+        }
+      } else {
+        console.log('Oh no! You fell of the field! GAME OVER!')
+        this.willYouReplay();
+      };
+
+  }
+
+  willYouReplay() {
+    let restart = prompt("Start Again? Type 'y' to start over or 'n' to exit.");
+    restart = restart.toLowerCase();
+
+    restart === 'y' ? this.play() :
+    restart === 'n' ? willYouReplay() :
+    willYouReplay();
+
 
   }
 
@@ -123,6 +138,7 @@ class Field {
       arrayToShuffle.push(pathCharacter);
     }
 
+    const shuffledArray = [];
     for (let j= arrayToShuffle.length -1; j > 0; j--) {
       const randomI =
       Math.floor(Math.random()*arrayToShuffle.length);
@@ -130,7 +146,7 @@ class Field {
       const lastElement = arrayToShuffle[j];
       arrayToShuffle[j] = arrayToShuffle[randomI];
       arrayToShuffle[randomI] = lastElement;
-    }
+    };
 
     const formatedArray = [];
     let l = 0;
@@ -149,5 +165,4 @@ class Field {
 const newArray = Field.generateField(7, 5, 20);
 
 const newField = new Field(newArray);
-newField.print();
-console.log(newField.findCurrentPosition());
+newField.play();
