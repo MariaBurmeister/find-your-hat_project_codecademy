@@ -6,9 +6,9 @@ const emptyFieldCharacter = '░';
 const pathCharacter = '*';
 
 
-class Field {
-  constructor(field) {
-    this._field = field;
+class Game {
+  constructor() {
+    this._field = [];
     this._currentPosition = {
       i: 0,
       j: 0
@@ -20,7 +20,15 @@ class Field {
   }
 
   play() {
-    this.currentPosition;
+    const enteredHeigth = Number(prompt(`Enter field heigth:`));
+    const enteredWwidth = Number(prompt(`Enter field width:`));
+    const holePercentage = Number(prompt(`Enter percentage of holes:`));
+
+
+    this.generateField(enteredHeigth, enteredWwidth, holePercentage);
+
+
+    this.initialPosition;
     this.print();
     this.move();
 
@@ -31,7 +39,7 @@ class Field {
 
   }
 
-  get currentPosition() {
+  get initialPosition() {
 
     this.field.forEach((row, rowIndex) => {
       const indexOfAsteriskInRow = row.indexOf('*');
@@ -68,25 +76,28 @@ class Field {
     }
 
     if (direction === moves.up) {
-      targetPosition.i = this.currentPosition.i -1;
-      targetPosition.j = this.currentPosition.j
+      targetPosition.i = this._currentPosition.i -1;
+      targetPosition.j = this._currentPosition.j
     } else if (direction === moves.down) {
-      targetPosition.i = this.currentPosition.i +1;
-      targetPosition.j = this.currentPosition.j;
+      targetPosition.i = this._currentPosition.i +1;
+      targetPosition.j = this._currentPosition.j;
     } else if (direction === moves.left) {
-      targetPosition.i = this.currentPosition.i;
-      targetPosition.j = this.currentPosition.j -1;
+      targetPosition.i = this._currentPosition.i;
+      targetPosition.j = this._currentPosition.j -1;
     } else if (direction === moves.right) {
-      targetPosition.i = this.currentPosition.i;
-      targetPosition.j = this.currentPosition.j +1;
+      targetPosition.i = this._currentPosition.i;
+      targetPosition.j = this._currentPosition.j +1;
     } else {
       console.log("Invalid move: please use 'a' for left, 'w' for up, 's' for down and 'd' for right.");
       this.move();
     };
 
+
     const target = this.field[targetPosition.i][targetPosition.j];
 
     if (target) {
+
+
       if (target === hole) {
         console.log('Oh no! You fell in a hole! GAME OVER!')
         this.willYouReplay();
@@ -100,7 +111,7 @@ class Field {
 
         this.print();
         this.move();
-        }
+      };
       } else {
         console.log('Oh no! You fell of the field! GAME OVER!')
         this.willYouReplay();
@@ -112,14 +123,15 @@ class Field {
     let restart = prompt("Start Again? Type 'y' to start over or 'n' to exit.");
     restart = restart.toLowerCase();
 
+
     restart === 'y' ? this.play() :
-    restart === 'n' ? willYouReplay() :
+    restart === 'n' ? console.log(`Bye! Thanks for playing!`) :
     willYouReplay();
 
 
   }
 
-  static generateField(heigth, width, percentage) {
+  generateField(heigth, width, percentage) {
     const slotsToFill =
     heigth * width;
     const fillWithHoles =
@@ -162,7 +174,6 @@ class Field {
 }
 
 
-const newArray = Field.generateField(7, 5, 20);
 
-const newField = new Field(newArray);
-newField.play();
+const game = new Game();
+game.play();
