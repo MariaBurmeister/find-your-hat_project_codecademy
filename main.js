@@ -15,6 +15,11 @@ class Game {
     }
   }
 
+  loop() {
+    // print _field
+    // listenToInput
+  }
+
   get field() {
     return this._field;
   }
@@ -36,7 +41,6 @@ class Game {
 
   print() {
     this._field.forEach(row => console.log(row.join(``)));
-
   }
 
   get initialPosition() {
@@ -93,30 +97,37 @@ class Game {
     };
 
 
+    // se o target position.i < 0 || targetPosition.i > fieldWidth
+    // se o target position.j < 0 || targetPosition.j > fieldHeigth
+
+    if (!this.field[targetPosition.i] || !this.field[targetPosition.i][targetPosition.j]) {
+      console.log('Oh no! You fell of the field! GAME OVER!')
+      this.willYouReplay();
+      return;
+    }
+
     const target = this.field[targetPosition.i][targetPosition.j];
 
-    if (target) {
+    if (target === hole) {
+      console.log('Oh no! You fell in a hole! GAME OVER!')
+      this.willYouReplay();
+      return;
+    }
 
+    if (target === hat) {
+      console.log('Congratulations! You found your hat!')
+      this.willYouReplay();
+      return;
+    }
 
-      if (target === hole) {
-        console.log('Oh no! You fell in a hole! GAME OVER!')
-        this.willYouReplay();
-      } else if (target === hat) {
-        console.log('Congratulations! You found your hat!')
-        this.willYouReplay();
-      } else if (target === emptyFieldCharacter) {
-        this._field[targetPosition.i].splice(targetPosition.j, 1, pathCharacter);
-        // this._field[this._currentPosition.i].splice(this._currentPosition.j, 1, emptyFieldCharacter);
-        this._currentPosition = targetPosition;
+    if (target === emptyFieldCharacter) {
+      this._field[targetPosition.i].splice(targetPosition.j, 1, pathCharacter);
+      // this._field[this._currentPosition.i].splice(this._currentPosition.j, 1, emptyFieldCharacter);
+      this._currentPosition = targetPosition;
 
-        this.print();
-        this.move();
-      };
-      } else {
-        console.log('Oh no! You fell of the field! GAME OVER!')
-        this.willYouReplay();
-      };
-
+      this.print();
+      this.move();
+    };
   }
 
   willYouReplay() {
@@ -169,7 +180,7 @@ class Game {
     }
 
    this._field = formatedArray;
-   return formatedArray;
+   //return formatedArray;
   }
 }
 
