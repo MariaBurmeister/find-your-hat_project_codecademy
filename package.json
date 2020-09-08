@@ -5,7 +5,11 @@
   "main": "main.js",
   "author": "Codecademy",
   "license": "ISC",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
+    "jest": "^26.4.2",
     "prompt-sync": "^4.1.7"
   }
 }
