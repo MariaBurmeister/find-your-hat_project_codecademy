@@ -1,5 +1,35 @@
 const prompt = require('prompt-sync')({sigint: true});
 
+// Warn if overriding existing method
+if(Array.prototype.equals)
+    console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+// attach the .equals method to Array's prototype to call it on any array
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0, l=this.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].equals(array[i]))
+                return false;
+        }
+        else if (this[i] != array[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+};
+// Hide method from for-in loops
+Object.defineProperty(Array.prototype, "equals", {enumerable: false});
+
 const hat = '^';
 const hole = 'O';
 const emptyFieldCharacter = '░';
@@ -16,6 +46,7 @@ class Field {
       i:0,
       j:0
     };
+    this._bestSolutionField = [];
   }
 
   get field() {
@@ -52,6 +83,10 @@ class Field {
         this._hatPosition.i = rowIndex;
       };
     });
+  }
+
+  get bestSolutionField() {
+    return this._bestSolutionField;
   }
 
   generateField(heigth, width, percentage) {
@@ -104,6 +139,10 @@ class Field {
 
     const testField = field.map(row => row.map(spot => spot));
 
+
+    const bestSolution = [];
+    const bestSolutionField = field.map(row => row.map(spot => spot));
+
     const openSet = [];
     const closedSet = [];
 
@@ -140,67 +179,73 @@ class Field {
     };
 
 
-    function isValid() {
-
-      while (openSet.length > 0) {
+    while (openSet.length > 0) {
       let indexShorterWay = 0;
 
-        for(let index = 0; index < openSet.length; index++) {
+      for(let index = 0; index < openSet.length; index++) {
 
-          const candidateSpot = openSet[index];
-          const currentPathSpot = openSet[indexShorterWay];
+        const candidateSpot = openSet[index];
+        const currentPathSpot = openSet[indexShorterWay];
 
-          const candidateHeuristic = candidateSpot.guessTotalDistanceCost();
-          const currentPathHeuristic = currentPathSpot.guessTotalDistanceCost();
+        const candidateHeuristic = candidateSpot.guessTotalDistanceCost();
+        const currentPathHeuristic = currentPathSpot.guessTotalDistanceCost();
 
-          if(candidateHeuristic < currentPathHeuristic) {
-            indexShorterWay = index;
-          };
-
-          const currentSpot = openSet[indexShorterWay];
-          const neighbours = currentSpot.neighbours;
-
-          if(currentSpot === hatSpot) {
-            return true;
-          };
-
-          removeFromArray(openSet, currentSpot);
-          closedSet.push(currentSpot);
-
-          neighbours.forEach((neighbour) => {
-
-            if (!closedSet.includes(neighbour)) {
-
-              const possibleNeighbourDistance = currentSpot.distanceRun +1;
-
-              if(openSet.includes(neighbour)) {
-                if(possibleNeighbourDistance < neighbour.distanceRun) {
-                  neighbour.distanceRun = possibleNeighbourDistance;
-                };
-
-              } else {
-                neighbour.distanceRun = possibleNeighbourDistance;
-                openSet.push(neighbour);
-              };
-            };
-          });
+        if(candidateHeuristic < currentPathHeuristic) {
+          indexShorterWay = index;
         };
-      };
 
-      if(openSet.length <= 0) {
-        console.log(openSet.length);
-        return false;
+        const currentSpot = openSet[indexShorterWay];
+        const neighbours = currentSpot.neighbours;
+
+        if(currentSpot === hatSpot) {
+          let pushToSolution = currentSpot;
+
+          while (pushToSolution.previous) {
+            pushToSolution = pushToSolution.previous;
+            bestSolution.push(pushToSolution);
+          };
+
+          bestSolution.forEach((pathSpot) => {
+            bestSolutionField.forEach((row, rowIndex) => {
+              if(rowIndex === pathSpot.i) {
+                row.forEach((spot, spotIndex) => {
+                  if(spotIndex === pathSpot.j) {
+                    row.splice(spotIndex, 1, pathCharacter);
+                  };
+                });
+              };
+            });
+          });
+          this._bestSolutionField = bestSolutionField;
+          return true;
+        }
+
+        removeFromArray(openSet, currentSpot);
+        closedSet.push(currentSpot);
+
+        neighbours.forEach((neighbour) => {
+
+          if (!closedSet.includes(neighbour)) {
+
+            const possibleNeighbourDistance = currentSpot.distanceRun +1;
+
+            if(openSet.includes(neighbour)) {
+              if(possibleNeighbourDistance < neighbour.distanceRun) {
+                neighbour.distanceRun = possibleNeighbourDistance;
+              };
+
+            } else {
+              neighbour.distanceRun = possibleNeighbourDistance;
+              neighbour.previous = currentSpot;
+              openSet.push(neighbour);
+            };
+          };
+        });
       };
     };
-
-
-    // const hatSpot = new Spot(this.hatPosition.i, this.hatPosition.j);
-
-
-    // const start = field[this.initialPosition.i][this.initialPosition.j];
-
-    // return !openSet === [] ? true : false;
-    return isValid();
+    if(openSet.length <= 0) {
+      return false;
+    };
   }
 }
 
@@ -218,6 +263,7 @@ class Spot {
 
     this.guessedTotalDistanceCost = this.guessTotalDistanceCost();
 
+    this.previous = undefined;
     this.neighbours = [];
     }
 
@@ -332,7 +378,7 @@ class Game {
       console.log('Oh no! You fell of the field! GAME OVER!')
       this.willYouReplay();
       return;
-    }
+    };
 
     const target = this.fieldObject.field[targetPosition.i][targetPosition.j];
 
@@ -340,13 +386,18 @@ class Game {
       console.log('Oh no! You fell in a hole! GAME OVER!')
       this.willYouReplay();
       return;
-    }
+    };
 
     if (target === hat) {
-      console.log('Congratulations! You found your hat!')
+      console.log('Congratulations! You found your hat!');
+
+      if (this.fieldObject.field.equals(this.fieldObject.bestSolutionField)) {
+        console.log('Additionally, you took the shortest possible path! You must be really smart :)');
+      };
+
       this.willYouReplay();
       return;
-    }
+    };
 
     if (target === emptyFieldCharacter) {
       this._fieldObject._field[targetPosition.i].splice(targetPosition.j, 1, pathCharacter);
