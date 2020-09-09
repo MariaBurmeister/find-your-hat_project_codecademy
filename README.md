@@ -17,6 +17,6 @@ because of how they're passed (and compared) by reference (I hope I'm right abou
 The **solution I found in [Stack Overflow](https://stackoverflow.com/questions/7837456/how-to-compare-arrays-in-javascript)**, 
 was very satisfactory!
 
-I could also count with tha help of my friend, who introduced me to **[jest](https://jestjs.io/en/)**, which I employed in debugging.
+I could also count with the help of my friend, who introduced me to **[jest](https://jestjs.io/en/)**, which I employed in debugging.
 
 And so goes my learning path so far. I'm definetly learning a lot and enjoying every moment (even the "I have no idea what is happenning here!" ones ;))! 
